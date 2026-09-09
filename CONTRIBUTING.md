@@ -1,9 +1,9 @@
 # Contributing
 
-Use Python 3.11+ and run `python3 -m unittest discover -s tests -v`. Changes to the runner must also pass the Docker integration job. Dashboard JavaScript must pass `node --check dist/app.js`.
+Run `python3 -m unittest discover -s tests -v`, `node --check dist/app.js` and `node tests/dashboard.test.cjs`. Docker runner changes must pass both integration jobs.
 
-Open a focused PR explaining the customer decision improved, the scope of new observations and test evidence. Keep demo data explicitly synthetic. Do not replace deterministic verdicts with model-generated judgments. Never count timeout, missing observation or failed setup as protection success.
+Explain the customer decision improved and the observations actually measured. Keep Python and browser decision semantics consistent. Never count timeout, API failure, missing observations or cleanup failure as a successful boundary verification. Do not show fabricated evidence as measured results.
 
-New scenarios must use synthetic assets, fixed reviewed scripts and bounded resource use. Do not submit host escapes, credential harvesting, arbitrary network targets or privileged-mode fixtures. Untrusted-agent execution requires a separate verifier/isolation design review.
+New backends require explicit runtime capability checks and a documented threat model. Do not add privileged containers, real credential mounts or host socket access to default scenarios. Preserve the host/controller and model credential boundaries. Test report validation, local API authorization and cleanup behavior for relevant changes.
 
-Keep imports browser-local and use text-safe DOM APIs. Document schema changes and maintain Python/JavaScript decision parity. Add meaningful tests for changed decision semantics.
+The dashboard source is `dist/`; the wheel build copies those assets into package data. Do not maintain a second authored dashboard tree.

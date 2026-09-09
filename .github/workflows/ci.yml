@@ -18,7 +18,7 @@ jobs:
           python-version: '${{ matrix.python }}'
       - run: python -m unittest discover -s tests -v
       - run: python -m boundary_proof validate examples/contract.json
-      - run: python -m boundary_proof verify dist/demo.json
+      - run: python -m boundary_proof verify tests/fixtures/legacy-report.json
       - run: node --check dist/app.js
       - run: node tests/dashboard.test.cjs
   docker-integration:
@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: docker pull python:3.12-alpine
-      - run: python -m boundary_proof run --output reports/docker.json
+      - run: python -m boundary_proof run --contract examples/contract.json --output reports/docker.json
       - run: python -m boundary_proof verify reports/docker.json
       - name: Assert profile behavior
         run: |
@@ -48,3 +48,53 @@ jobs:
           name: docker-evidence
           path: reports/
           retention-days: 14
+
+  repository-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: docker pull python:3.12-alpine
+      - run: python -m boundary_proof run --repo . --contract boundary.json --output reports/repository.json
+      - run: python -m boundary_proof verify reports/repository.json
+      - name: Assert independent verification and cleanup
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('reports/repository.json'))
+          assert r['schema_version']=='2.0'
+          assert r['candidates']==['balanced'], r['summary']
+          assert r['summary']=={'candidate':3,'violated':3,'unusable':3,'inconclusive':0},r['summary']
+          assert all(x['cleanup_ok'] for x in r['runs'])
+          assert all(x['verification'] for x in r['runs'])
+          PY
+      - run: PYTHONPATH=. python tests/integration_repository.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repository-evidence
+          path: reports/
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install build
+      - run: python -m build --outdir release
+      - name: Verify installed distribution
+        run: |
+          python -m venv /tmp/bp-installed
+          /tmp/bp-installed/bin/pip install release/*.whl
+          cd /tmp
+          /tmp/bp-installed/bin/boundary-proof --help
+          /tmp/bp-installed/bin/python -c "from pathlib import Path; import boundary_proof; assert (Path(boundary_proof.__file__).parent/'dashboard'/'index.html').exists()"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: boundary-proof-installable
+          path: release/

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "boundary-proof"
-version = "0.1.0"
+version = "0.2.0"
 description = "Evidence-driven permission evaluation for AI workflows"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -17,3 +17,6 @@ boundary-proof = "boundary_proof.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["boundary_proof*"]
+
+[tool.setuptools.package-data]
+boundary_proof = ["dashboard/*"]

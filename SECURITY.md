@@ -1,7 +1,9 @@
 # Security policy
 
-Boundary Proof 0.1 is an experimental evaluation tool for trusted, fixed synthetic fixtures. It is not a security certification, agent sandbox, or containment layer for hostile code.
+Boundary Proof evaluates user-selected repository workflows. Its Docker backend is not a containment guarantee against kernel exploits. Use a dedicated disposable VM for untrusted agents. The local API requires a session token, verifies Host/Origin, binds to loopback and evaluates only the repository selected at launch. Do not expose it through a public reverse proxy.
 
-Please use GitHub private vulnerability reporting if enabled. Otherwise open an issue asking for a private reporting channel without publishing exploit details or sensitive data. Do not include real credentials, customer files or confidential reports in public issues.
+Model-provider credentials remain on the host controller; command outputs may be sent to the configured provider. Never commit credentials or use confidential source without the appropriate provider approval. No genuine secret is needed for boundary probes.
 
-Supported scope: current main branch and the latest 0.1 release. Findings involving report forgery should account for the documented lack of cryptographic authenticity: the checksum is intentionally not a signature.
+Checksums are not signatures. Independent acceptance execution limits worker interference but does not provide a formally adversarially robust oracle when acceptance scripts import generated code. Reports establish only the recorded observations.
+
+Use GitHub private vulnerability reporting if available. Otherwise request a private channel without including exploit details or sensitive data in a public issue. Supported scope: current main and latest 0.2 release.

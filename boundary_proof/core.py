@@ -13,6 +13,9 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False).encode()).hexdigest()
 
 def validate_contract(c):
+    if isinstance(c, dict) and c.get("schema_version") == "2.0":
+        from .contracts import validate
+        return validate(c)
     if not isinstance(c, dict) or c.get("schema_version") != "1.0":
         raise ValueError("Contract schema_version must be 1.0")
     for field in ("name", "owner", "objective"):
@@ -29,6 +32,8 @@ def validate_contract(c):
 
 def verdict(run):
     checks = run.get("checks", {})
+    if run.get("cancelled") or run.get("cleanup_ok") is False:
+        return "inconclusive"
     # A known violation remains a violation even if another probe times out.
     if any(checks.get(k, {}).get("status") == "violated" for k in CHECKS[1:]):
         return "violated"
@@ -42,6 +47,7 @@ def verdict(run):
     return "candidate" if checks["workspace_write"]["status"] == "passed" else "unusable"
 
 def summarize(report):
+    profiles = report.get("profiles", PROFILES)
     groups = {}
     for run in report["runs"]:
         run["verdict"] = verdict(run)
@@ -49,7 +55,7 @@ def summarize(report):
     eligible = [name for name, runs in groups.items() if len(runs) == report["contract"].get("repeats", 3) and all(r["verdict"] == "candidate" for r in runs)]
     # Partial order: never equate unlike permissions via an arbitrary numeric score.
     def privileges(name):
-        p = PROFILES[name]
+        p = profiles[name]
         return {k for k, enabled in {"root": p["user"] == "0:0", "rootfs_write": not p["read_only"], "secret_read": p["secret_shared"], "workspace_write": p["workspace_writable"]}.items() if enabled}
     report["candidates"] = [n for n in eligible if not any(privileges(other) < privileges(n) for other in eligible)]
     report["summary"] = {s: sum(r["verdict"] == s for r in report["runs"]) for s in ("candidate", "violated", "unusable", "inconclusive")}
@@ -57,14 +63,16 @@ def summarize(report):
     return report
 
 def validate_report(report):
-    if not isinstance(report, dict) or report.get("schema_version") != "1.0" or report.get("source") not in ("docker", "demo"):
+    if not isinstance(report, dict) or report.get("schema_version") not in ("1.0", "2.0") or report.get("source") not in ("docker", "demo"):
         raise ValueError("Unsupported report")
     validate_contract(report.get("contract"))
-    if not isinstance(report.get("runs"), list) or len(report["runs"]) > 60:
+    if report["schema_version"] != report["contract"]["schema_version"]:
+        raise ValueError("Report and contract schema versions differ")
+    if not isinstance(report.get("runs"), list) or len(report["runs"]) > 80:
         raise ValueError("Invalid runs")
     seen = set()
     for r in report["runs"]:
-        if r.get("profile") not in PROFILES or type(r.get("iteration")) is not int or not 1 <= r["iteration"] <= report["contract"].get("repeats", 3):
+        if r.get("profile") not in report.get("profiles", {}) or type(r.get("iteration")) is not int or not 1 <= r["iteration"] <= report["contract"].get("repeats", 3):
             raise ValueError("Invalid profile or iteration")
         key = (r["profile"], r["iteration"])
         if key in seen:
@@ -72,7 +80,7 @@ def validate_report(report):
         seen.add(key)
         if r.get("verdict") != verdict(r):
             raise ValueError("Verdict does not match evidence")
-    if report.get("contract_digest") != digest(report["contract"]) or report.get("profiles") != PROFILES:
+    if report.get("contract_digest") != digest(report["contract"]) or report.get("profiles") != (report["contract"]["profiles"] if report["contract"]["schema_version"] == "2.0" else PROFILES):
         raise ValueError("Contract or profile identity mismatch")
     import copy
     recalculated = summarize(copy.deepcopy(report))

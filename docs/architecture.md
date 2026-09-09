@@ -1,44 +1,17 @@
-# Architecture and threat model
+# Architecture
 
-## Data flow
+The repository evaluator snapshots committed Git HEAD and records its digest. A seed container restores the archive into two disposable volumes: writable candidate workspace and original reference. Per-profile workers execute commands and optional agent tools. The worker is removed before an independent verifier mounts both volumes read-only and runs acceptance scripts from `/reference` in Python isolated mode. The controller records observations, artifact hashes, command traces, resource cleanup and a permission-set decision.
 
-1. A local CLI validates a versioned JSON workflow contract.
-2. The host controller resolves the existing image to an immutable image ID.
-3. Each trial receives a fresh container and temporary synthetic workspace.
-4. Fixed probes record four observable conditions. Their exit code vocabulary is controller-defined; arbitrary errors are inconclusive.
-5. The deterministic task compiles/tests/packages a tiny Python fixture.
-6. The controller checks the produced artifact, removes its named container, and stores evidence.
-7. A pure evaluator assigns verdicts and the minimal eligible profile set.
-8. The static dashboard reads portable JSON entirely in the browser.
+The local service binds to loopback, validates Host and Origin, requires a random session token for APIs, and fixes the repository path at startup. Only one evaluation runs at a time. A background thread records progress and persists the final/partial report atomically. Reports survive service restarts. The UI can launch, cancel, inspect history and edit validated contracts in local mode; a static hosted viewer supports local import and report analysis.
 
-The browser cannot launch containers or change policy. The CLI never accepts arbitrary shell commands, mounts or Docker flags from a contract. Host subprocesses use argument arrays and never `shell=True`.
+The optional model adapter lives on the controller. Credentials remain there. Only a container-command function is exposed to the model; its tool calls cannot supply Docker options or choose a host subprocess. Transcript observations travel to the operator-configured provider. The model is not a verifier.
 
-## Trust boundary
+## Explicit limits
 
-The host, Docker daemon, CLI, local image and fixed scripts are trusted for this release. Containers exercise known synthetic conditions; they are not a safe containment environment for unknown kernel exploits or malicious agent code. Privileged execution, host runtime access and genuine secrets are unnecessary and absent.
+This is an operational, bounded evaluation tool, not formal proof of isolation. Docker Engine shares a kernel with its host/VM. Use a disposable outer VM when executing untrusted agents. The separate verifier can execute generated application code through customer acceptance scripts, so it is not a trusted hardware oracle immune to all adversarial interference. Checks cover the named synthetic observations only.
 
-The controller owns evaluation, but individual probe observations originate in a container process. An adaptive attacker could forge exit codes, race filesystem checks or interfere with probes. Therefore v0.1 is **not an adversarially robust verifier**. A future untrusted-agent adapter must isolate probe execution and observation, restrict artifact handling, and use an outer disposable VM or appropriate sandbox boundary.
+Workspace mounts are Docker volumes rather than live source mounts. The only bind-mounted probe asset is a synthetic constant. The image is resolved to an immutable local ID; networking is disabled in every container. Jobs use CPU, memory, PID, time, transcript and artifact limits, but these do not replace host-level quota enforcement.
 
-An ordinary container is not claimed to contain kernel exploits. Docker Sandboxes uses a different isolation architecture and is not implemented by wrapping this runner or relabeling its results.
+Baselines require the same contract and recorded runtime fingerprint. Commits may differ. Hashes give content identity, not publisher authenticity. Different reports cannot establish causal performance improvements; durations are diagnostic measurements only.
 
-## Contract semantics
-
-All four checks are mandatory in v1.0. `root_identity` states that the process must be non-root; it never implies a root process escaped the container. `secret_read` protects a synthetic string only. `rootfs_write` attempts one canary path, not every filesystem location. `workspace_write` is a functional capability condition.
-
-A denied operation at the tested path establishes that bounded observation only. ENOENT is a blocked outcome for an unshared synthetic resource. Missing dependencies, Docker exec failures, timeouts and unexplained errors are inconclusive. A known forbidden success takes precedence over uncertainty elsewhere.
-
-Only the audited `python-build` workflow is accepted. The `owner` and `objective` fields communicate intent; arbitrary prose is not converted to executable policy.
-
-## Comparability
-
-The report records image ID, Docker server version, task/probe hashes, network mode and contract hash. Baseline comparison demands equality of the recorded environment. This is conservative but not a complete environment fingerprint: kernel, virtualization, storage, hardware and daemon policy are not exhaustively captured. No timing or causal-performance claims are made from these reports. Recorded durations are diagnostics only.
-
-## Evidence integrity
-
-Reports include a canonical JSON SHA-256 checksum. Python and browser validators also recompute verdicts, repetitions, summaries and minimal candidate selection. Anyone able to edit the report can recompute a checksum; authenticity requires a separately trusted signature/attestation, intentionally deferred.
-
-## Failure handling
-
-All real trials attempt container removal in `finally`. Cleanup failures appear explicitly in the run. If the process is forcibly killed, inspect containers named `boundary-proof-*` and remove only those belonging to the interrupted evaluation. Temporary workspace mounts are created by the runner. No global Docker prune is used.
-
-The local dashboard server binds to loopback and serves only the selected static directory. The hosted dashboard never receives imported reports. Raw imported strings are inserted as text nodes, not HTML.
+Legacy schema 1.0 reports remain readable. Schema 2.0 adds configurable profiles, repository identity, workload/verification traces, artifact metadata and optional model execution. The old synthetic fixture is a test resource, not dashboard content.

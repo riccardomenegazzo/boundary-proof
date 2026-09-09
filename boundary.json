@@ -1,0 +1,59 @@
+{
+  "schema_version": "2.0",
+  "name": "Boundary Proof \u00b7 self evaluation",
+  "owner": "Platform Engineering",
+  "objective": "Compile and package the real evaluator, preserving conservative verdicts and the protected environment.",
+  "workflow": "repository",
+  "image": "python:3.12-alpine",
+  "repeats": 3,
+  "timeout_seconds": 120,
+  "required_checks": [
+    "workspace_write",
+    "secret_read",
+    "rootfs_write",
+    "root_identity"
+  ],
+  "profiles": {
+    "permissive": {
+      "user": "0:0",
+      "read_only": false,
+      "secret_shared": true,
+      "workspace_writable": true
+    },
+    "restricted": {
+      "user": "10001:10001",
+      "read_only": true,
+      "secret_shared": false,
+      "workspace_writable": false
+    },
+    "balanced": {
+      "user": "10001:10001",
+      "read_only": true,
+      "secret_shared": false,
+      "workspace_writable": true
+    }
+  },
+  "steps": [
+    [
+      "python",
+      "-m",
+      "compileall",
+      "-q",
+      "boundary_proof"
+    ],
+    [
+      "python",
+      "-c",
+      "from pathlib import Path; import zipfile; z=zipfile.ZipFile('boundary-proof-source.zip','w'); [z.write(p,p.name) for p in Path('boundary_proof').glob('*.py')]; z.close()"
+    ]
+  ],
+  "verify": [
+    [
+      "python",
+      "/reference/tests/acceptance.py"
+    ]
+  ],
+  "artifacts": [
+    "boundary-proof-source.zip"
+  ]
+}

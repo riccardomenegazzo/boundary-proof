@@ -1,126 +1,154 @@
 # Boundary Proof
 
-**Verify that useful work succeeds—and explicit permission boundaries hold.**
+**Run your repository under different permissions. Verify the work independently. Inspect the evidence.**
 
 [![CI](https://github.com/riccardomenegazzo/boundary-proof/actions/workflows/ci.yml/badge.svg)](https://github.com/riccardomenegazzo/boundary-proof/actions/workflows/ci.yml)
 
-Boundary Proof is a local-first evaluation kit for platform teams and Technical Account Managers planning AI workflow adoption. It compares permission profiles against an executable workflow contract, preserves raw observations, and identifies minimal eligible configurations among those tested.
+Boundary Proof is an open-source evaluation application for platform teams and Technical Account Managers managing AI workflow adoption. It executes committed repositories in Docker, compares configurable permission profiles, runs acceptance scripts in a separate verifier, and provides a local dashboard for starting, cancelling and reviewing evaluations.
 
-> **v0.1 scope:** a real Docker runner for a fixed Python build fixture, four non-exploit probes, three permission profiles, repeated trials, and an interactive report dashboard. The bundled dashboard opens with clearly labeled **synthetic demo data**. No real agent, sandbox escape, prompt injection, or formal security proof is claimed.
+**The application starts empty. It never fills the dashboard with fabricated results.**
 
-## Why it exists
+## Start a real evaluation
 
-A restrictive environment can stop unwanted behavior and also stop the work. A permissive environment can finish the task while exposing resources it never needed. Boundary Proof makes both outcomes visible, giving customer engineering, security and platform stakeholders an evidence trail for a bounded pilot decision.
-
-The project is inspired by PrivEscalate's differential verification methodology. Its contribution is a workflow-oriented comparison that joins functional success, explicit boundary observations, conservative uncertainty handling, and recurring adoption reviews. It does not reuse the paper's attack corpus or implement its offensive agent.
-
-## Quick start
-
-Python **3.11+** is required. The CLI has no runtime Python dependencies.
+Requirements: Python 3.11+, Git, and a running Docker Desktop or Docker Engine with Linux containers.
 
 ```bash
 git clone https://github.com/riccardomenegazzo/boundary-proof.git
 cd boundary-proof
-python3 -m boundary_proof demo
-python3 -m boundary_proof serve
-```
-
-Open **http://127.0.0.1:8080**. Explore the demonstration, inspect each run, print a review, or import a report. Files are processed in your browser, not uploaded. The dashboard does not connect to a Docker daemon.
-
-For real measurements, start Docker Desktop or Docker Engine:
-
-```bash
-docker pull python:3.12-alpine
-python3 -m boundary_proof validate examples/contract.json
-python3 -m boundary_proof run --output reports/local.json
-python3 -m boundary_proof verify reports/local.json
-```
-
-Import `reports/local.json` in the dashboard. The runner resolves the local image to its immutable image ID before running. It never implicitly pulls an image. For repeatable environments, pull and supply an approved digest reference with `--image`.
-
-Optional installed CLI:
-
-```bash
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install .
-boundary-proof --help
+docker pull python:3.12-alpine
+boundary-proof doctor
+boundary-proof serve --repo . --contract boundary.json
 ```
 
-On macOS, use a current Python 3.11+ interpreter; the old system Python may be too old. A standard Linux-container Docker Desktop installation is sufficient for this fixture. Rootless engines and unusual bind-mount permission mappings may produce different or inconclusive results: inspect the evidence rather than assuming the demo's outcome.
+Open the **complete session URL** printed in the terminal. Click **Run evaluation**. The included contract evaluates Boundary Proof's actual source: compilation, source packaging and independent acceptance checks. Observe progress, select a recorded evaluation and inspect its commands, verification output and artifact hashes.
 
-## What is evaluated
-
-| Profile | Process user | Root filesystem | Workspace | Synthetic secret |
-|---|---|---|---|---|
-| Permissive | UID 0 | Writable | Writable | Shared read-only |
-| Restricted | UID 10001 | Read-only | Read-only | Not shared |
-| Balanced | UID 10001 | Read-only | Writable | Not shared |
-
-Every profile disables networking, drops all capabilities, enables `no-new-privileges`, and applies CPU, memory and PID limits. No host Docker socket, real credential, host system directory or privileged mode is used.
-
-The legitimate fixture creates a Python module, compiles it, executes two assertions and writes a ZIP artifact. The external controller checks the exact archive member and source content. This is a deterministic build fixture, **not a coding-agent completion benchmark**.
-
-The four probes check workspace writing, synthetic-secret reading, root-filesystem writing and process identity. Becoming root is neither attempted nor needed: root identity is a declared policy condition, not evidence of host compromise.
-
-## Decisions without invented scores
-
-- **Candidate:** task succeeds and every required boundary observation satisfies the contract in every required repetition.
-- **Boundary violated:** at least one forbidden observation succeeds, even if another check is inconclusive.
-- **Task blocked:** observations complete but the legitimate task cannot finish.
-- **Inconclusive:** missing observations, unexpected probe errors, setup failures or timeouts cannot establish success.
-
-Candidate selection uses set inclusion over the tested permissions. Incomparable minimal candidates can coexist; there is no universal “security score.” Confidence is limited to the fixture, probes, image, environment and repetitions recorded.
-
-## Dashboard
-
-A dependency-free, responsive evidence workspace is included in `dist/`:
-
-- Three-profile comparison and boundary matrix.
-- Explicit synthetic versus imported-data labels.
-- Per-run observations and expandable task/probe evidence.
-- Local JSON import/export with checksum and decision validation.
-- Baseline comparison that rejects unlike contracts, sources or environments.
-- Printable customer review, keyboard-accessible controls and mobile layout.
-
-Serve `dist/` with any static server. GitHub Pages can also serve these files via the manually triggered `Dashboard Pages` workflow after Pages is configured to use GitHub Actions. This repository does not enable public Pages automatically.
-
-## Regression review
+For CLI-only use:
 
 ```bash
-python3 -m boundary_proof compare reports/baseline.json reports/current.json
+boundary-proof run --repo . --contract boundary.json --output reports/result.json
+boundary-proof verify reports/result.json
+boundary-proof compare reports/baseline.json reports/result.json
 ```
 
-Exit codes: `0` success/no lost candidate, `1` no eligible profile or detected regression, `2` invalid input/infrastructure error, `130` interrupted. Compare requires an identical contract hash, source and recorded environment. A change of image/probe/task identity requires establishing a new baseline.
+The wheel includes the dashboard. Running `boundary-proof serve` after installation does not require a frontend build or Node. The server binds to loopback and accepts only the session token it generated. Reports persist under `~/.boundary-proof/reports` by default; override with `--state`.
 
-## Tests and CI
+## Evaluate your own repository
+
+```bash
+cd /path/to/your/repository
+boundary-proof init --name 'Platform adoption evaluation'
+```
+
+Edit `boundary.json`: choose a locally available image, workload commands, permission profiles and acceptance scripts. Add your acceptance script to the repository and commit all tracked changes. Then start `boundary-proof serve --repo . --contract boundary.json`.
+
+The runner evaluates **committed HEAD only**, ignoring untracked files and rejecting dirty tracked files, submodules, symlinks and common credential file paths. This makes source identity explicit. It does not replace a secret scanner: review the selected repository before execution or use with a remote model.
+
+The selected image must contain **Python 3.11.8+** for seeding/probes and every dependency your workload requires. Network access inside the containers is disabled; install dependencies in an approved image beforehand. An existing Node, Go or other application can be evaluated using an image that also contains Python for the controller's probes.
+
+### Contract example
+
+```json
+{
+  "schema_version": "2.0",
+  "name": "Service build",
+  "owner": "Platform Engineering",
+  "objective": "Build the package and satisfy independent acceptance checks",
+  "workflow": "repository",
+  "image": "my-approved-build-image:latest",
+  "repeats": 3,
+  "timeout_seconds": 120,
+  "required_checks": ["workspace_write", "secret_read", "rootfs_write", "root_identity"],
+  "steps": [["python", "build.py"]],
+  "verify": [["python", "/reference/boundary_verify.py"]],
+  "artifacts": ["build/package.zip"],
+  "profiles": {
+    "limited": {
+      "user": "10001:10001",
+      "read_only": true,
+      "secret_shared": false,
+      "workspace_writable": true
+    }
+  }
+}
+```
+
+`steps` are argument arrays executed inside the workspace container. They are never executed by a host shell. The workload sees `/workspace` and an immutable `/reference` snapshot.
+
+`verify` scripts are loaded from `/reference`, executed with Python isolated mode, and should inspect `/workspace`. The worker is removed before verification. The verifier receives both volumes read-only and a writable temporary directory; it cannot quietly rewrite the output to make a test pass. See [the repository's acceptance script](tests/acceptance.py).
+
+Artifact entries must be relative file paths. The verifier records SHA-256 and size, rejects symlinks, and caps each file at 50 MB. Acceptance scripts remain responsible for semantic correctness.
+
+## Run a real tool-calling agent
+
+Add an optional `agent` section to a repository contract:
+
+```json
+"agent": {
+  "model": "YOUR_PROVIDER_MODEL_ID",
+  "instruction": "Inspect the repository and complete the requested change. Preserve the acceptance tests and produce the required build artifact.",
+  "max_turns": 12
+}
+```
+
+Set `BOUNDARY_PROOF_API_KEY` in the **controller's environment**. Optionally set `BOUNDARY_PROOF_API_BASE` to a Chat Completions compatible `/v1` endpoint. It defaults to `https://api.openai.com/v1`; local providers may use a loopback HTTP endpoint without a key.
+
+Workload preparation steps run first. The agent then uses a `container_command` tool, with each command executed inside the existing restricted worker. The API key never enters the container. Command observations are sent to the configured provider and can include repository contents: use a provider approved for that source. Turns, usage and command traces appear in the report. Timeout, invalid tool calls, API failure and exhausted budgets are inconclusive.
+
+**The agent's final message never determines the verdict.** Independent acceptance checks run afterward. The protocol adapter has automated tests; live model quality depends on the selected provider/model and must be measured using your configured credentials. There is no bundled fake model presented as a real agent evaluation.
+
+## What the dashboard does
+
+| Local workspace | Hosted/static viewer |
+|---|---|
+| Start/cancel real Docker evaluations | Import measured JSON reports |
+| Edit and validate contracts | Validate report consistency and checksum |
+| Monitor progress and failures | Compare permission profiles |
+| Select persistent evaluation history | Inspect workflow, agent and verifier traces |
+| Inspect measured results | Compare baselines and print reviews |
+
+Imported reports stay in the browser. A hosted viewer deliberately cannot control your Docker daemon. To execute evaluations, open the session URL from the local CLI. The same dashboard assets are used in both modes.
+
+## Decision semantics
+
+- **Candidate:** every required repetition completes useful work and satisfies all four checked conditions.
+- **Boundary violated:** a forbidden observation succeeds.
+- **Task blocked:** observations finish but the workload fails.
+- **Inconclusive:** missing observations, infrastructure errors, failed cleanup, cancellation or unknown execution results.
+
+Candidate selection compares permission sets, retaining minimal eligible profiles and allowing incomparable candidates. It does not invent a numerical security score. Baseline comparisons require the same contract, source type and recorded runtime environment; repository commits may differ so code regressions can be detected.
+
+The probes cover a writable workspace, one synthetic secret, one root-filesystem canary and non-root identity. UID 0 is a contract condition, not evidence of host escape. Kernel attacks, network egress policy and Docker socket escape are not assessed by these probes.
+
+## Isolation and limits
+
+Every worker/verifier has disabled networking, dropped capabilities, no-new-privileges and CPU/memory/PID limits. Workspaces use disposable named volumes, not the customer's live repository. No host runtime socket or genuine credential is mounted. Resources carry an evaluation label and are removed on completion/cancellation; forced termination can still require manual cleanup of that run's named resources.
+
+Docker Engine containers are not a containment guarantee against kernel exploitation. Use a dedicated disposable VM for untrusted agent experimentation. The verifier is separate from the worker, but executes customer acceptance code and may import generated code; this is not a formally adversarially robust proof system. SHA-256 checksums detect content changes, not forged provenance.
+
+Docker Sandboxes/microVM-native integration is **not implemented**; no current result is labeled as such. Boundary Proof works with Docker Engine, including Docker Desktop's Engine.
+
+## Validation and packaging
 
 ```bash
 python3 -m unittest discover -s tests -v
 node --check dist/app.js
+node tests/dashboard.test.cjs
+python3 -m pip wheel . --no-deps --wheel-dir /tmp/boundary-proof-wheel
 ```
 
-CI runs unit tests on Python 3.11–3.13, validates dashboard assets and runs a real Docker integration evaluation on an Ubuntu runner. Docker evidence is retained as a workflow artifact. The integration gate requires `balanced` to qualify, the permissive profile to violate boundaries, and the restrictive profile to block the task. Failed setup cannot silently pass the gate.
+CI covers Python 3.11–3.13, the legacy fixture, and the real repository evaluation with independent checks. Reports are saved as workflow artifacts. The release workflow builds an installable wheel, source distribution and standalone dashboard archive on version tags.
 
-The release workflow builds a Python wheel, source distribution and dashboard archive on version tags. Review a green CI run before tagging a release.
+Exit codes: `0` success/no lost candidate; `1` no qualifying profile or detected regression; `2` input/infrastructure error; `130` interruption.
 
-## Design, limitations and contribution
+## Project background
 
-- [Architecture and threat model](docs/architecture.md)
-- [Five-minute customer demo](docs/demo.md)
-- [Roadmap](docs/roadmap.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security policy](SECURITY.md)
+Inspired by the differential verification approach in [PrivEscalate](https://github.com/yxsec/PrivEscalate), Boundary Proof focuses on a customer adoption decision: which tested permissions preserve useful work and satisfy explicit observed boundaries? It does not reuse the paper's exploit corpus or implement its offensive escalation agent.
 
-SHA-256 checksums detect accidental content modification. They are **not signatures**, execution attestations or a trust anchor against someone who can rewrite a report. Imported provenance is self-reported. The runner and its subprocess observations assume a trusted controller and trusted fixed fixture. Untrusted adaptive agents need a stronger verification boundary and are outside v0.1.
+Related work: [Docker Bench for Security](https://github.com/docker/docker-bench-security), [Confine](https://github.com/shamedgh/confine), [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/).
 
-Docker Sandboxes/microVM support, real-agent adapters and broader workflow contracts are planned, not implemented. Docker is the initial runtime integration; the project is independent and not affiliated with or endorsed by Docker, Sysdig or the PrivEscalate authors.
+[Architecture](docs/architecture.md) · [Operating guide](docs/operations.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-## Related work
-
-- [PrivEscalate](https://github.com/yxsec/PrivEscalate): Linux privilege-escalation measurement and differential verification; see the accompanying paper by Yixuan Liu, Zilong Zhen, Yin Wu and Yi Li.
-- [Docker Bench for Security](https://github.com/docker/docker-bench-security): configuration best-practice checks.
-- [Confine](https://github.com/shamedgh/confine): syscall policy generation.
-- [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/): isolated agent environments; future adapter target.
-
-Licensed under Apache-2.0.
+Independent project, not affiliated with or endorsed by Docker, Sysdig or the paper's authors. Apache-2.0.

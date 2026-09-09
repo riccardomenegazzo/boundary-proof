@@ -1,0 +1,2 @@
+recursive-include dist *.html *.css *.js
+include LICENSE README.md
