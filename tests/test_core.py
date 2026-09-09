@@ -57,6 +57,7 @@ class EvaluationTests(unittest.TestCase):
         import zipfile
         with tempfile.TemporaryDirectory() as d:
             exec(TASK.replace("'/workspace'",repr(d)))
+            self.assertFalse(any(p.is_dir() for p in pathlib.Path(d).iterdir()), 'Avoid foreign-owned nested directories on host bind mounts')
             with zipfile.ZipFile(pathlib.Path(d)/'artifact.zip') as z:
                 self.assertEqual(z.read('calculator.py'),b'def add(a, b):\n    return a + b\n')
 

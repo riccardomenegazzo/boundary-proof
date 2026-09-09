@@ -31,7 +31,7 @@ TASK = '''import pathlib, py_compile, zipfile
 p = pathlib.Path('/workspace')
 source = p / 'calculator.py'
 source.write_text('def add(a, b):\\n    return a + b\\n')
-py_compile.compile(str(source), doraise=True)
+py_compile.compile(str(source), cfile=str(p / 'calculator.pyc'), doraise=True)
 ns = {}; exec(source.read_text(), ns)
 assert ns['add'](2, 3) == 5
 assert ns['add'](-2, 2) == 0
