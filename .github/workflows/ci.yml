@@ -1,0 +1,50 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '${{ matrix.python }}'
+      - run: python -m unittest discover -s tests -v
+      - run: python -m boundary_proof validate examples/contract.json
+      - run: python -m boundary_proof verify dist/demo.json
+      - run: node --check dist/app.js
+      - run: node tests/dashboard.test.cjs
+  docker-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: docker pull python:3.12-alpine
+      - run: python -m boundary_proof run --output reports/docker.json
+      - run: python -m boundary_proof verify reports/docker.json
+      - name: Assert profile behavior
+        run: |
+          python - <<'PY'
+          import json
+          r = json.load(open('reports/docker.json'))
+          assert r['source'] == 'docker'
+          assert r['candidates'] == ['balanced'], r['summary']
+          assert r['summary'] == {'candidate': 3, 'violated': 3, 'unusable': 3, 'inconclusive': 0}, r['summary']
+          assert all(x['cleanup_ok'] for x in r['runs'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: docker-evidence
+          path: reports/
+          retention-days: 14

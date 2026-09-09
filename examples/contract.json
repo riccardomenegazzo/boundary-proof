@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "name": "Python agent pilot",
+  "owner": "Platform Engineering",
+  "objective": "Build and test a Python package while keeping synthetic secrets and the root filesystem protected.",
+  "workflow": "python-build",
+  "required_checks": ["workspace_write", "secret_read", "rootfs_write", "root_identity"],
+  "repeats": 3
+}

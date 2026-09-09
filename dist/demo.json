@@ -1,0 +1,484 @@
+{
+  "schema_version": "1.0",
+  "id": "4f9f8fee-0afe-4c8e-afd2-151a012caa92",
+  "created_at": "2026-09-09T10:28:01.276170+00:00",
+  "source": "demo",
+  "contract": {
+    "schema_version": "1.0",
+    "name": "Python agent pilot",
+    "owner": "Platform Engineering",
+    "objective": "Build and test a Python package while keeping synthetic secrets and the root filesystem protected.",
+    "workflow": "python-build",
+    "required_checks": [
+      "workspace_write",
+      "secret_read",
+      "rootfs_write",
+      "root_identity"
+    ],
+    "repeats": 3
+  },
+  "contract_digest": "807f655bcfc0e10c6369ccf8a6c3d45faf98abd60cd04d578b617e31fc2dbedb",
+  "profiles": {
+    "permissive": {
+      "user": "0:0",
+      "read_only": false,
+      "secret_shared": true,
+      "workspace_writable": true
+    },
+    "restricted": {
+      "user": "10001:10001",
+      "read_only": true,
+      "secret_shared": false,
+      "workspace_writable": false
+    },
+    "balanced": {
+      "user": "10001:10001",
+      "read_only": true,
+      "secret_shared": false,
+      "workspace_writable": true
+    }
+  },
+  "runs": [
+    {
+      "profile": "permissive",
+      "iteration": 1,
+      "checks": {
+        "workspace_write": {
+          "status": "passed",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "passed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "violated"
+    },
+    {
+      "profile": "permissive",
+      "iteration": 2,
+      "checks": {
+        "workspace_write": {
+          "status": "passed",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "passed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "violated"
+    },
+    {
+      "profile": "permissive",
+      "iteration": 3,
+      "checks": {
+        "workspace_write": {
+          "status": "passed",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "violated",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "passed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "violated"
+    },
+    {
+      "profile": "restricted",
+      "iteration": 1,
+      "checks": {
+        "workspace_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "failed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "unusable"
+    },
+    {
+      "profile": "restricted",
+      "iteration": 2,
+      "checks": {
+        "workspace_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "failed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "unusable"
+    },
+    {
+      "profile": "restricted",
+      "iteration": 3,
+      "checks": {
+        "workspace_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "failed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "unusable"
+    },
+    {
+      "profile": "balanced",
+      "iteration": 1,
+      "checks": {
+        "workspace_write": {
+          "status": "passed",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "passed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "candidate"
+    },
+    {
+      "profile": "balanced",
+      "iteration": 2,
+      "checks": {
+        "workspace_write": {
+          "status": "passed",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "passed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "candidate"
+    },
+    {
+      "profile": "balanced",
+      "iteration": 3,
+      "checks": {
+        "workspace_write": {
+          "status": "passed",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "secret_read": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "rootfs_write": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        },
+        "root_identity": {
+          "status": "blocked",
+          "evidence": {
+            "stdout": "Synthetic fixture; not measured",
+            "exit_code": null,
+            "duration_ms": 0
+          }
+        }
+      },
+      "task": {
+        "status": "passed",
+        "artifact_verified": false,
+        "evidence": {
+          "stdout": "Illustrative result only",
+          "duration_ms": 0
+        }
+      },
+      "verdict": "candidate"
+    }
+  ],
+  "scope": "Fixed synthetic Python workflow and four deterministic probes; not an agent benchmark or host-escape assessment.",
+  "environment": {
+    "image_id": "synthetic \u2014 no container executed",
+    "network": "simulated"
+  },
+  "candidates": [
+    "balanced"
+  ],
+  "summary": {
+    "candidate": 3,
+    "violated": 3,
+    "unusable": 3,
+    "inconclusive": 0
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "digest": "a0dd8714e38e70c0829ccc636e664e3874ef72c5c8325812ace0792842eac370"
+  }
+}

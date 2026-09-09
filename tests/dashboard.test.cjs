@@ -1,0 +1,7 @@
+// Exercise the actual browser validator against Python-produced reports without a browser.
+const fs=require('node:fs'), vm=require('node:vm'), assert=require('node:assert/strict');
+const source=fs.readFileSync('dist/app.js','utf8');
+const nodes=new Map();const stub=()=>({textContent:'',value:'all',append(){},replaceChildren(){},setAttribute(){},classList:{add(){},remove(){}}});
+const context={console,TextEncoder,crypto:require('node:crypto').webcrypto,setTimeout,document:{getElementById(id){if(!nodes.has(id))nodes.set(id,stub());return nodes.get(id);},querySelectorAll(){return [];},createElement:stub},fetch:async()=>({ok:false}),window:{},URL,Blob};
+vm.createContext(context);vm.runInContext(source,context);
+(async()=>{const r=JSON.parse(fs.readFileSync('dist/demo.json','utf8'));await context.validate(r);const tampered=structuredClone(r);tampered.contract.name='Forged';await assert.rejects(()=>context.validate(tampered),/Checksum/);const missing=structuredClone(r.runs.at(-1));delete missing.checks.secret_read;assert.equal(context.verdict(missing),'inconclusive');const incomplete=structuredClone(r);incomplete.runs.pop();delete incomplete.integrity;incomplete.integrity={digest:await context.hash(incomplete)};await assert.rejects(()=>context.validate(incomplete),/Summary/);console.log('Dashboard validation parity, tamper and missing-evidence tests passed.');})().catch(e=>{console.error(e);process.exitCode=1;});
